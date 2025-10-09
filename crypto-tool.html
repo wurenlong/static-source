@@ -20,6 +20,9 @@
               primary: "#6366f1",
               secondary: "#10b981",
               dark: "#1e293b",
+              darkBg: "#121212",
+              darkCard: "#1e1e1e",
+              darkText: "#e0e0e0",
             },
             fontFamily: {
               sans: ["Inter", "system-ui", "sans-serif"],
@@ -45,6 +48,16 @@
         .record-item-enc {
           @apply bg-blue-50 p-4 rounded-lg border border-gray-200 mb-3 flex flex-col gap-2 transition-all-300 hover:shadow-md;
         }
+        /* 暗黑模式样式 */
+        .dark .record-item-des {
+          @apply bg-red-900/20 border-gray-700;
+        }
+        .dark .record-item-enc {
+          @apply bg-blue-900/20 border-gray-700;
+        }
+        .dark .pre-formatted {
+          @apply text-gray-300;
+        }
       }
       .pre-formatted {
         white-space: pre-wrap;
@@ -52,28 +65,91 @@
         overflow-x: auto;
         vertical-align: top;
       }
+      /* 暗黑模式全局样式 */
+      .dark {
+        color-scheme: dark;
+      }
+      .dark body {
+        @apply bg-gradient-to-br from-gray-700 text-darkText;
+      }
+      .dark main,
+      .dark aside {
+        @apply bg-darkCard border-gray-700;
+      }
+      .dark input,
+      .dark textarea {
+        @apply bg-gray-800 border-gray-700 text-white placeholder-gray-400;
+      }
+      .dark .bg-gray-50 {
+        @apply bg-gray-800;
+      }
+      .dark .bg-gray-200 {
+        @apply bg-gray-700;
+      }
+      .dark .bg-gray-300 {
+        @apply bg-gray-600;
+      }
+      .dark .text-gray-500 {
+        @apply text-gray-400;
+      }
+      .dark .text-gray-600 {
+        @apply text-gray-300;
+      }
+      .dark .text-gray-700 {
+        @apply text-gray-200;
+      }
+      .dark .text-gray-800 {
+        @apply text-gray-100;
+      }
+      .dark .bg-blue-100 {
+        @apply bg-blue-900/30;
+      }
+      .dark .text-blue-800 {
+        @apply text-blue-300;
+      }
+      .dark .bg-green-100 {
+        @apply bg-green-900/30;
+      }
+      .dark .text-green-800 {
+        @apply text-green-300;
+      }
+      /* 按钮在暗黑模式下的样式 */
+      .dark #copyBtn,
+      .dark #clearBtn,
+      .dark #decryptBtn:not(.bg-primary) {
+        @apply bg-gray-700 text-gray-200 hover:bg-gray-600;
+      }
     </style>
   </head>
   <body
-    class="bg-gradient-to-br from-slate-50 to-indigo-50 min-h-screen font-sans text-dark"
+    class="bg-gradient-to-br from-slate-50 to-indigo-50 min-h-screen font-sans text-dark transition-all duration-500 ease-in-out"
     style="overflow: hidden"
   >
     <div class="container mx-auto px-4 py-8">
       <!-- 头部 -->
       <header class="text-center mb-10">
-        <h1
-          class="text-[clamp(1.8rem,4vw,2.5rem)] font-bold text-primary mb-3 flex items-center justify-center"
-        >
-          <i class="fa fa-key mr-3"></i>加密解密工具
-        </h1>
-        <!-- <p class="text-gray-600">左侧进行加密解密操作，右侧查看操作记录</p> -->
+        <div class="flex justify-center items-center mb-3">
+          <h1
+            class="text-[clamp(1.8rem,4vw,2.5rem)] font-bold text-primary flex items-center"
+          >
+            <i class="fa fa-key mr-3"></i>加密解密工具
+          </h1>
+          <!-- 主题切换按钮 -->
+          <button
+            id="themeToggle"
+            class="ml-4 p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition-all-300"
+          >
+            <i class="fa fa-moon-o dark:hidden text-gray-600"></i>
+            <i class="fa fa-sun-o hidden dark:inline text-yellow-400"></i>
+          </button>
+        </div>
       </header>
 
       <!-- 主内容区 - 左右布局 -->
       <div class="flex flex-col lg:flex-row gap-6">
         <!-- 左侧：操作面板 -->
         <main
-          class="bg-white rounded-xl shadow-md p-6 md:p-8 card-hover lg:w-1/2"
+          class="bg-white rounded-xl shadow-md p-6 md:p-8 card-hover lg:w-1/2 border border-gray-100 transition-all-300"
         >
           <!-- 操作选择 -->
           <div class="flex flex-wrap justify-center gap-4 mb-8">
@@ -93,7 +169,9 @@
 
           <!-- 密钥输入 -->
           <div class="mb-6">
-            <label for="key" class="block text-gray-700 font-medium mb-2"
+            <label
+              for="key"
+              class="block text-gray-700 font-medium mb-2 dark:text-gray-300"
               >加密密钥：</label
             >
             <input
@@ -109,7 +187,9 @@
 
           <!-- 输入区域 -->
           <div class="mb-6">
-            <label for="inputText" class="block text-gray-700 font-medium mb-2"
+            <label
+              for="inputText"
+              class="block text-gray-700 font-medium mb-2 dark:text-gray-300"
               >输入文本：</label
             >
             <textarea
@@ -144,7 +224,9 @@
 
           <!-- 输出区域 -->
           <div>
-            <label for="outputText" class="block text-gray-700 font-medium mb-2"
+            <label
+              for="outputText"
+              class="block text-gray-700 font-medium mb-2 dark:text-gray-300"
               >结果：</label
             >
             <textarea
@@ -159,10 +241,12 @@
 
         <!-- 右侧：记录面板 -->
         <aside
-          class="bg-white rounded-xl shadow-md p-6 md:p-8 card-hover lg:w-1/2"
+          class="bg-white rounded-xl shadow-md p-6 md:p-8 card-hover lg:w-1/2 border border-gray-100 transition-all-300"
         >
           <div class="flex justify-between items-center mb-6">
-            <h2 class="text-xl font-semibold text-gray-800 flex items-center">
+            <h2
+              class="text-xl font-semibold text-gray-800 flex items-center dark:text-gray-200"
+            >
               <i class="fa fa-history mr-2 text-primary"></i>操作记录
             </h2>
             <button
@@ -210,10 +294,62 @@
       const notification = document.getElementById("notification");
       const notificationText = document.getElementById("notificationText");
       const recordsContainer = document.getElementById("recordsContainer");
+      const themeToggle = document.getElementById("themeToggle");
+      const bodyElement = document.body;
 
       // 状态变量
       let isEncryptMode = true;
       let records = []; // 存储操作记录
+      let isDarkMode = false;
+
+      // 初始化主题
+      function initTheme() {
+        // 检查本地存储的主题偏好
+        const savedTheme = localStorage.getItem("theme");
+        // 检查系统偏好
+        const prefersDark = window.matchMedia(
+          "(prefers-color-scheme: dark)"
+        ).matches;
+
+        if (savedTheme === "dark" || (!savedTheme && prefersDark)) {
+          enableDarkMode();
+        } else {
+          disableDarkMode();
+        }
+      }
+
+      // 启用暗黑模式
+      function enableDarkMode() {
+        document.documentElement.classList.add("dark");
+        isDarkMode = true;
+        localStorage.setItem("theme", "dark");
+        // 为背景添加过渡动画类
+        bodyElement.classList.add("transition-all", "duration-500");
+      }
+
+      // 禁用暗黑模式
+      function disableDarkMode() {
+        document.documentElement.classList.remove("dark");
+        isDarkMode = false;
+        localStorage.setItem("theme", "light");
+        // 为背景添加过渡动画类
+        bodyElement.classList.add("transition-all", "duration-500");
+      }
+
+      // 切换主题
+      function toggleTheme() {
+        // 移除并重新添加过渡类以确保动画触发
+        bodyElement.classList.remove("transition-all", "duration-500");
+        void bodyElement.offsetWidth; // 触发重绘
+
+        if (isDarkMode) {
+          disableDarkMode();
+          showNotification("已切换至亮色模式");
+        } else {
+          enableDarkMode();
+          showNotification("已切换至暗色模式");
+        }
+      }
 
       // RC4加密函数
       function rc4Encrypt(text, key) {
@@ -451,7 +587,16 @@
       // 清空所有记录按钮事件
       clearAllRecordsBtn.addEventListener("click", clearAllRecords);
 
+      // 主题切换事件
+      themeToggle.addEventListener("click", toggleTheme);
+
+      // 监听系统主题变化
+      window
+        .matchMedia("(prefers-color-scheme: dark)")
+        .addEventListener("change", initTheme);
+
       // 初始设置
+      initTheme(); // 初始化主题
       decryptBtn.click(); // 默认选择解密模式
       inputText.focus();
       loadRecordsFromStorage(); // 加载保存的记录
