@@ -1,0 +1,460 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>RC4加密解密工具</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link
+      href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css"
+      rel="stylesheet"
+    />
+    <!-- 引入CryptoJS库 -->
+    <script src="https://cdn.bootcdn.net/ajax/libs/crypto-js/4.2.0/crypto-js.min.js"></script>
+
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              primary: "#6366f1",
+              secondary: "#10b981",
+              dark: "#1e293b",
+            },
+            fontFamily: {
+              sans: ["Inter", "system-ui", "sans-serif"],
+            },
+          },
+        },
+      };
+    </script>
+    <style type="text/tailwindcss">
+      @layer utilities {
+        .content-auto {
+          content-visibility: auto;
+        }
+        .transition-all-300 {
+          transition: all 300ms ease-in-out;
+        }
+        .card-hover {
+          @apply hover:shadow-lg transform hover:-translate-y-1 transition-all duration-300;
+        }
+        .record-item-des {
+          @apply bg-red-50 p-4 rounded-lg border border-gray-200 mb-3 flex flex-col gap-2 transition-all-300 hover:shadow-md;
+        }
+        .record-item-enc {
+          @apply bg-blue-50 p-4 rounded-lg border border-gray-200 mb-3 flex flex-col gap-2 transition-all-300 hover:shadow-md;
+        }
+      }
+      .pre-formatted {
+        white-space: pre-wrap;
+        word-wrap: break-word;
+        overflow-x: auto;
+        vertical-align: top;
+      }
+    </style>
+  </head>
+  <body
+    class="bg-gradient-to-br from-slate-50 to-indigo-50 min-h-screen font-sans text-dark"
+    style="overflow: hidden"
+  >
+    <div class="container mx-auto px-4 py-8">
+      <!-- 头部 -->
+      <header class="text-center mb-10">
+        <h1
+          class="text-[clamp(1.8rem,4vw,2.5rem)] font-bold text-primary mb-3 flex items-center justify-center"
+        >
+          <i class="fa fa-key mr-3"></i>加密解密工具
+        </h1>
+        <!-- <p class="text-gray-600">左侧进行加密解密操作，右侧查看操作记录</p> -->
+      </header>
+
+      <!-- 主内容区 - 左右布局 -->
+      <div class="flex flex-col lg:flex-row gap-6">
+        <!-- 左侧：操作面板 -->
+        <main
+          class="bg-white rounded-xl shadow-md p-6 md:p-8 card-hover lg:w-1/2"
+        >
+          <!-- 操作选择 -->
+          <div class="flex flex-wrap justify-center gap-4 mb-8">
+            <button
+              id="encryptBtn"
+              class="bg-primary hover:bg-primary/90 text-white font-medium py-3 px-6 rounded-lg shadow flex items-center gap-2 transition-all-300"
+            >
+              <i class="fa fa-lock"></i> 加密
+            </button>
+            <button
+              id="decryptBtn"
+              class="bg-gray-200 hover:bg-gray-300 text-gray-700 font-medium py-3 px-6 rounded-lg shadow flex items-center gap-2 transition-all-300"
+            >
+              <i class="fa fa-unlock"></i> 解密
+            </button>
+          </div>
+
+          <!-- 密钥输入 -->
+          <div class="mb-6">
+            <label for="key" class="block text-gray-700 font-medium mb-2"
+              >加密密钥：</label
+            >
+            <input
+              type="password"
+              id="key"
+              class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-all-300"
+              placeholder="请输入加密/解密密钥..."
+            />
+            <p class="text-xs text-gray-500 mt-1">
+              提示：密钥用于加密和解密，解密时需要使用相同的密钥
+            </p>
+          </div>
+
+          <!-- 输入区域 -->
+          <div class="mb-6">
+            <label for="inputText" class="block text-gray-700 font-medium mb-2"
+              >输入文本：</label
+            >
+            <textarea
+              id="inputText"
+              rows="5"
+              class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-all-300 resize-none"
+              placeholder="请输入要加密或解密的文本..."
+            ></textarea>
+          </div>
+
+          <!-- 按钮区域 -->
+          <div class="flex flex-wrap gap-4 justify-center mb-6">
+            <button
+              id="processBtn"
+              class="bg-secondary hover:bg-secondary/90 text-white font-medium py-3 px-8 rounded-lg shadow flex items-center gap-2 transition-all-300"
+            >
+              <i class="fa fa-cogs"></i> 执行操作
+            </button>
+            <button
+              id="copyBtn"
+              class="bg-gray-200 hover:bg-gray-300 text-gray-700 font-medium py-3 px-8 rounded-lg shadow flex items-center gap-2 transition-all-300"
+            >
+              <i class="fa fa-copy"></i> 复制结果
+            </button>
+            <button
+              id="clearBtn"
+              class="bg-gray-200 hover:bg-gray-300 text-gray-700 font-medium py-3 px-8 rounded-lg shadow flex items-center gap-2 transition-all-300"
+            >
+              <i class="fa fa-trash"></i> 清空
+            </button>
+          </div>
+
+          <!-- 输出区域 -->
+          <div>
+            <label for="outputText" class="block text-gray-700 font-medium mb-2"
+              >结果：</label
+            >
+            <textarea
+              id="outputText"
+              rows="5"
+              class="w-full px-4 py-3 border border-gray-300 rounded-lg bg-gray-50 focus:ring-2 focus:ring-primary focus:border-primary transition-all-300 resize-none"
+              placeholder="处理后的结果将显示在这里..."
+              readonly
+            ></textarea>
+          </div>
+        </main>
+
+        <!-- 右侧：记录面板 -->
+        <aside
+          class="bg-white rounded-xl shadow-md p-6 md:p-8 card-hover lg:w-1/2"
+        >
+          <div class="flex justify-between items-center mb-6">
+            <h2 class="text-xl font-semibold text-gray-800 flex items-center">
+              <i class="fa fa-history mr-2 text-primary"></i>操作记录
+            </h2>
+            <button
+              id="clearAllRecords"
+              class="text-gray-500 hover:text-red-500 text-sm transition-all-300"
+            >
+              <i class="fa fa-trash-o mr-1"></i>清空所有记录
+            </button>
+          </div>
+
+          <!-- 记录列表 -->
+          <div
+            id="recordsContainer"
+            class="space-y-3 max-h-[calc(100vh-300px)] overflow-y-auto pr-2"
+          >
+            <div class="text-center text-gray-500 py-10">
+              <i class="fa fa-inbox text-4xl mb-3 opacity-30"></i>
+              <p>暂无操作记录</p>
+            </div>
+          </div>
+        </aside>
+      </div>
+    </div>
+
+    <!-- 通知提示 -->
+    <div
+      id="notification"
+      class="fixed bottom-5 right-5 bg-dark text-white px-6 py-3 rounded-lg shadow-lg transform translate-y-20 opacity-0 transition-all-300 flex items-center gap-2 z-50"
+    >
+      <i class="fa fa-check-circle"></i>
+      <span id="notificationText"></span>
+    </div>
+
+    <script>
+      // 获取DOM元素
+      const encryptBtn = document.getElementById("encryptBtn");
+      const decryptBtn = document.getElementById("decryptBtn");
+      const processBtn = document.getElementById("processBtn");
+      const copyBtn = document.getElementById("copyBtn");
+      const clearBtn = document.getElementById("clearBtn");
+      const clearAllRecordsBtn = document.getElementById("clearAllRecords");
+      const inputText = document.getElementById("inputText");
+      const outputText = document.getElementById("outputText");
+      const keyInput = document.getElementById("key");
+      const notification = document.getElementById("notification");
+      const notificationText = document.getElementById("notificationText");
+      const recordsContainer = document.getElementById("recordsContainer");
+
+      // 状态变量
+      let isEncryptMode = true;
+      let records = []; // 存储操作记录
+
+      // RC4加密函数
+      function rc4Encrypt(text, key) {
+        if (!text || !key) return "";
+        return CryptoJS.RC4.encrypt(text, key).toString();
+      }
+
+      // RC4解密函数
+      function rc4Decrypt(ciphertext, key) {
+        if (!ciphertext || !key) return "";
+        const bytes = CryptoJS.RC4.decrypt(ciphertext, key);
+        return bytes.toString(CryptoJS.enc.Utf8);
+      }
+
+      // 显示通知
+      function showNotification(message) {
+        notificationText.textContent = message;
+        notification.classList.remove("translate-y-20", "opacity-0");
+        notification.classList.add("translate-y-0", "opacity-100");
+
+        setTimeout(() => {
+          notification.classList.remove("translate-y-0", "opacity-100");
+          notification.classList.add("translate-y-20", "opacity-0");
+        }, 3000);
+      }
+
+      // 添加操作记录
+      function addRecord(originalText, resultText, isEncrypt, key) {
+        const timestamp = new Date();
+        const formattedTime = timestamp.toLocaleString();
+
+        const record = {
+          id: Date.now(), // 使用时间戳作为唯一ID
+          originalText: originalText,
+          resultText: resultText,
+          isEncrypt: isEncrypt,
+          key: key,
+          time: formattedTime,
+        };
+
+        // 添加到记录数组
+        records.unshift(record); // 最新的记录放在前面
+
+        // 更新UI
+        renderRecords();
+
+        // 保存到sessionStorage，刷新页面不丢失
+        sessionStorage.setItem("rc4ToolRecords", JSON.stringify(records));
+      }
+
+      // 渲染所有记录
+      function renderRecords() {
+        if (records.length === 0) {
+          recordsContainer.innerHTML = `
+            <div class="text-center text-gray-500 py-10">
+              <i class="fa fa-inbox text-4xl mb-3 opacity-30"></i>
+              <p>暂无操作记录</p>
+            </div>
+          `;
+          return;
+        }
+
+        recordsContainer.innerHTML = records
+          .map(
+            (record) => `
+          <div class="record-item-${
+            record.isEncrypt ? "enc" : "des"
+          }" data-id="${record.id}">
+            <div class="flex justify-between items-start">
+              <div class="flex items-center gap-2">
+                <span class="px-2 py-1 rounded text-xs font-medium ${
+                  record.isEncrypt
+                    ? "bg-blue-100 text-blue-800"
+                    : "bg-green-100 text-green-800"
+                }">
+                  ${record.isEncrypt ? "加密" : "解密"}
+                </span>
+                <span class="text-xs text-gray-500">${record.time}</span>
+              </div>
+              <button class="delete-record text-gray-400 hover:text-red-500 transition-all-300" data-id="${
+                record.id
+              }">
+                <i class="fa fa-times"></i>
+              </button>
+            </div>
+            
+            <div class="text-sm">
+              <div class="mb-1" style="display:${
+                record.isEncrypt ? "" : "none"
+              };">
+                <span class="text-gray-500">原始：</span>
+                <pre class="max-w-[90%] inline-block pre-formatted ">${
+                  record.originalText
+                }</pre>
+              </div>
+              
+              <div>
+                <span class="text-gray-500">结果：</span>
+                <pre class="max-w-[90%] inline-block pre-formatted">${
+                  record.resultText
+                }</pre>
+              </div>
+            </div>
+          </div>
+        `
+          )
+          .join("");
+
+        // 为删除按钮添加事件监听
+        document.querySelectorAll(".delete-record").forEach((btn) => {
+          btn.addEventListener("click", function () {
+            const id = parseInt(this.getAttribute("data-id"));
+            deleteRecord(id);
+          });
+        });
+      }
+
+      // 删除单条记录
+      function deleteRecord(id) {
+        records = records.filter((record) => record.id !== id);
+        renderRecords();
+        sessionStorage.setItem("rc4ToolRecords", JSON.stringify(records));
+        showNotification("记录已删除");
+      }
+
+      // 清空所有记录
+      function clearAllRecords() {
+        if (records.length === 0) {
+          showNotification("没有记录可清空");
+          return;
+        }
+
+        if (confirm("确定要清空所有操作记录吗？")) {
+          records = [];
+          renderRecords();
+          sessionStorage.removeItem("rc4ToolRecords");
+          showNotification("所有记录已清空");
+        }
+      }
+
+      // 从sessionStorage加载记录
+      function loadRecordsFromStorage() {
+        const savedRecords = sessionStorage.getItem("rc4ToolRecords");
+        if (savedRecords) {
+          try {
+            records = JSON.parse(savedRecords);
+            renderRecords();
+          } catch (e) {
+            console.error("加载记录失败:", e);
+            sessionStorage.removeItem("rc4ToolRecords");
+          }
+        }
+      }
+
+      // 事件监听
+      encryptBtn.addEventListener("click", () => {
+        isEncryptMode = true;
+        encryptBtn.classList.remove("bg-gray-200", "text-gray-700");
+        encryptBtn.classList.add("bg-primary", "text-white");
+        decryptBtn.classList.remove("bg-primary", "text-white");
+        decryptBtn.classList.add("bg-gray-200", "text-gray-700");
+        processBtn.innerHTML = '<i class="fa fa-cogs"></i> 执行加密';
+      });
+
+      decryptBtn.addEventListener("click", () => {
+        isEncryptMode = false;
+        decryptBtn.classList.remove("bg-gray-200", "text-gray-700");
+        decryptBtn.classList.add("bg-primary", "text-white");
+        encryptBtn.classList.remove("bg-primary", "text-white");
+        encryptBtn.classList.add("bg-gray-200", "text-gray-700");
+        processBtn.innerHTML = '<i class="fa fa-cogs"></i> 执行解密';
+      });
+
+      processBtn.addEventListener("click", () => {
+        const text = inputText.value.trim();
+        const key = keyInput.value.trim();
+
+        if (!text) {
+          showNotification("请输入要处理的文本");
+          return;
+        }
+
+        if (!key) {
+          showNotification("请输入密钥");
+          return;
+        }
+
+        try {
+          let result;
+          if (isEncryptMode) {
+            result = rc4Encrypt(text, key);
+            outputText.value = result;
+            showNotification("加密完成");
+          } else {
+            result = rc4Decrypt(text, key);
+            outputText.value = result;
+            showNotification("解密完成");
+          }
+
+          // 添加到操作记录
+          addRecord(text, result, isEncryptMode, key);
+        } catch (error) {
+          showNotification("处理失败：" + error.message);
+          console.error("加密解密错误:", error);
+        }
+      });
+
+      copyBtn.addEventListener("click", () => {
+        if (!outputText.value.trim()) {
+          showNotification("没有可复制的内容");
+          return;
+        }
+
+        outputText.select();
+        navigator.clipboard
+          .writeText(outputText.value)
+          .then(() => {
+            showNotification("已复制到剪贴板");
+          })
+          .catch((err) => {
+            showNotification("复制失败，请手动复制");
+            console.error("复制失败:", err);
+          });
+      });
+
+      clearBtn.addEventListener("click", () => {
+        inputText.value = "";
+        outputText.value = "";
+        // 保留密钥，方便连续操作
+        // keyInput.value = "";
+        inputText.focus();
+        showNotification("已清空输入输出内容");
+      });
+
+      // 清空所有记录按钮事件
+      clearAllRecordsBtn.addEventListener("click", clearAllRecords);
+
+      // 初始设置
+      decryptBtn.click(); // 默认选择解密模式
+      inputText.focus();
+      loadRecordsFromStorage(); // 加载保存的记录
+    </script>
+  </body>
+</html>
