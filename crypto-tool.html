@@ -180,6 +180,7 @@
             >
               <option value="RC4" selected>RC4</option>
               <option value="DES">DES</option>
+              <option value="MD5">MD5</option>
             </select>
           </div>
 
@@ -452,6 +453,8 @@
           return DESUtils.encrypt(text);
         } else if (cryptoType === "RC4") {
           return rc4Encrypt(text, key);
+        } else if (cryptoType === "MD5") {
+          return CryptoJS.MD5(text).toString();
         }
       }
 
@@ -460,6 +463,8 @@
           return DESUtils.decrypt(ciphertext);
         } else if (cryptoType === "RC4") {
           return rc4Decrypt(ciphertext, key);
+        } else if (cryptoType === "MD5") {
+          return CryptoJS.MD5(ciphertext).toString();
         }
       }
 
