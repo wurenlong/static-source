@@ -1,0 +1,452 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>四位数组合生成器（支持导入导出）</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: "Microsoft YaHei", sans-serif;
+        }
+        body {
+            background-color: #f0f2f5;
+            padding-bottom: 30px;
+        }
+        .container {
+            width: 95%;
+            max-width: 1200px;
+            margin: 20px auto;
+            padding: 0 10px;
+        }
+        h1 {
+            text-align: center;
+            color: #2c3e50;
+            margin-bottom: 25px;
+            font-size: 20px;
+            font-weight: 600;
+            line-height: 1.3;
+            padding: 0 10px;
+        }
+        .bit-box {
+            margin-bottom: 15px;
+            padding: 12px 10px;
+            background: #fff;
+            border-radius: 10px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        }
+        .bit-title {
+            font-size: 16px;
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: #34495e;
+            padding-left: 5px;
+        }
+        .num-checkbox {
+            display: inline-block;
+            margin: 6px 4%;
+            cursor: pointer;
+            width: 10%;
+            text-align: center;
+        }
+        .num-checkbox input {
+            width: 16px;
+            height: 16px;
+            margin-right: 3px;
+            vertical-align: middle;
+            cursor: pointer;
+        }
+        .num-checkbox span {
+            font-size: 15px;
+            color: #2c3e50;
+            vertical-align: middle;
+        }
+        .btn-group {
+            margin: 25px 0;
+            text-align: center;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 10px;
+        }
+        .btn {
+            padding: 11px 0;
+            font-size: 15px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            flex: 1;
+            min-width: 120px;
+            max-width: 180px;
+            transition: all 0.2s ease;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .generate-btn {
+            background: #2563eb;
+            color: #fff;
+        }
+        .generate-btn:hover {
+            background: #1d4ed8;
+            transform: translateY(-1px);
+        }
+        .clear-btn {
+            background: #ef4444;
+            color: #fff;
+        }
+        .clear-btn:hover {
+            background: #dc2626;
+            transform: translateY(-1px);
+        }
+        .copy-btn {
+            background: #10b981;
+            color: #fff;
+        }
+        .copy-btn:hover {
+            background: #059669;
+            transform: translateY(-1px);
+        }
+        .download-btn {
+            background: #f59e0b;
+            color: #fff;
+        }
+        .download-btn:hover {
+            background: #d97706;
+            transform: translateY(-1px);
+        }
+        .import-btn {
+            background: #8b5cf6;
+            color: #fff;
+        }
+        .import-btn:hover {
+            background: #7c3aed;
+            transform: translateY(-1px);
+        }
+        /* 隐藏原生文件输入框 */
+        #fileInput {
+            display: none;
+        }
+        .count-box {
+            text-align: center;
+            font-size: 17px;
+            font-weight: 700;
+            color: #ef4444;
+            margin-bottom: 12px;
+            height: 36px;
+            line-height: 26px;
+            background: #fff;
+            padding: 5px 10px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        }
+        .result-box {
+            margin-top: 0;
+            padding: 18px 15px;
+            background: #fff;
+            border-radius: 10px;
+            min-height: 180px;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            font-size: 15px;
+            line-height: 2;
+            color: #1f2937;
+            overflow-x: auto;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            scrollbar-width: thin;
+            scrollbar-color: #94a3b8 #e2e8f0;
+        }
+        .result-box::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        .result-box::-webkit-scrollbar-thumb {
+            background-color: #94a3b8;
+            border-radius: 3px;
+        }
+        .result-box::-webkit-scrollbar-track {
+            background-color: #e2e8f0;
+            border-radius: 3px;
+        }
+        .tip {
+            color: #64748b;
+            text-align: center;
+            margin-top: 12px;
+            font-size: 13px;
+            line-height: 1.5;
+            padding: 0 10px;
+        }
+        @media (max-width: 375px) {
+            .num-checkbox {
+                margin: 5px 3.5%;
+            }
+            .btn {
+                min-width: 100px;
+                font-size: 14px;
+                padding: 10px 0;
+            }
+            h1 {
+                font-size: 18px;
+            }
+            .result-box {
+                font-size: 14px;
+                line-height: 1.9;
+            }
+        }
+        @media (min-width: 768px) {
+            h1 {
+                font-size: 24px;
+                margin-bottom: 30px;
+            }
+            .bit-box {
+                padding: 15px;
+                margin-bottom: 20px;
+            }
+            .bit-title {
+                font-size: 18px;
+            }
+            .num-checkbox {
+                margin: 8px 15px;
+                width: auto;
+            }
+            .result-box {
+                font-size: 16px;
+                padding: 20px;
+                min-height: 200px;
+            }
+            .btn-group {
+                flex-wrap: nowrap;
+                gap: 15px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>四位数组合生成器（支持导入导出）</h1>
+        <!-- 千位勾选区 -->
+        <div class="bit-box">
+            <div class="bit-title">千位（0-9）</div>
+            <div id="qianBit" class="bit-content"></div>
+        </div>
+        <!-- 百位勾选区 -->
+        <div class="bit-box">
+            <div class="bit-title">百位（0-9）</div>
+            <div id="baiBit" class="bit-content"></div>
+        </div>
+        <!-- 十位勾选区 -->
+        <div class="bit-box">
+            <div class="bit-title">十位（0-9）</div>
+            <div id="shiBit" class="bit-content"></div>
+        </div>
+        <!-- 个位勾选区 -->
+        <div class="bit-box">
+            <div class="bit-title">个位（0-9）</div>
+            <div id="geBit" class="bit-content"></div>
+        </div>
+        <!-- 操作按钮 -->
+        <div class="btn-group">
+            <button class="btn generate-btn" onclick="generateCombination()">生成组合</button>
+            <button class="btn clear-btn" onclick="clearAll()">清空所有</button>
+            <button class="btn copy-btn" onclick="copyResult()">复制结果</button>
+            <button class="btn download-btn" onclick="downloadToTxt()">导出TXT</button>
+            <button class="btn import-btn" onclick="document.getElementById('fileInput').click()">导入TXT</button>
+            <input type="file" id="fileInput" accept=".txt" onchange="handleFileImport(event)">
+        </div>
+        <!-- 组合总数统计区 -->
+        <div class="count-box" id="countArea">总组合数：0</div>
+        <!-- 结果展示区 -->
+        <div class="result-box" id="resultArea">请勾选各数位的数字，点击「生成组合」查看结果<br>或点击「导入TXT」读取组合文件自动勾选</div>
+        <div class="tip">提示：1.生成的组合按「十位遍历完换行」展示；2.导入文件需为TXT格式，每行/空格分隔四位数组合（如1234 5678）；3.四位数格式：千位+百位+十位+个位（如1234=1千2百3十4个）</div>
+    </div>
+
+    <script>
+        // 初始化各数位的0-9复选框
+        window.onload = function() {
+            const bits = ['qianBit', 'baiBit', 'shiBit', 'geBit'];
+            bits.forEach(bitId => {
+                const bitContainer = document.getElementById(bitId);
+                for (let i = 0; i <= 9; i++) {
+                    const checkbox = document.createElement('label');
+                    checkbox.className = 'num-checkbox';
+                    checkbox.innerHTML = `<input type="checkbox" value="${i}"> <span>${i}</span>`;
+                    bitContainer.appendChild(checkbox);
+                }
+            });
+        };
+
+        // 获取指定数位勾选的数字
+        function getCheckedNums(bitId) {
+            const checkboxes = document.querySelectorAll(`#${bitId} input[type="checkbox"]:checked`);
+            return Array.from(checkboxes).map(item => item.value);
+        }
+
+        // 生成四位数组合 + 总数统计【核心优化：修复空格问题，语义化索引】
+        function generateCombination() {
+            // 明确各数位勾选数字，变量名语义化
+            const qianNums = getCheckedNums('qianBit'); // 千位可选数字
+            const baiNums = getCheckedNums('baiBit');   // 百位可选数字
+            const shiNums = getCheckedNums('shiBit');   // 十位可选数字
+            const geNums = getCheckedNums('geBit');     // 个位可选数字
+            const resultArea = document.getElementById('resultArea');
+            const countArea = document.getElementById('countArea');
+
+            // 校验：若某一位未勾选，提示用户并重置总数
+            if (!qianNums.length || !baiNums.length || !shiNums.length || !geNums.length) {
+                resultArea.innerHTML = '⚠️ 请至少勾选每个数位（千、百、十、个）的一个数字！';
+                resultArea.style.color = '#ef4444';
+                countArea.innerText = '总组合数：0';
+                return;
+            }
+
+            // 重置结果区样式
+            resultArea.style.color = '#1f2937';
+            let result = '';
+            // 计算总组合数
+            const totalCount = qianNums.length * baiNums.length * shiNums.length * geNums.length;
+
+            // 四重循环生成组合【语义化索引，避免混淆：q(千)→b(百)→s(十)→g(个)】
+            qianNums.forEach(q => {
+                baiNums.forEach(b => {
+                    shiNums.forEach(s => {
+                        // 十位内的所有个位组合拼接为一行，用空格分隔，无多余空格
+                        let shiLine = '';
+                        geNums.forEach(g => {
+                            shiLine += q + b + s + g + ' ';
+                        });
+                        // 去除行尾多余空格，再换行
+                        result += shiLine.trim() + '\n';
+                    });
+                    // 百位遍历完空一行，区分层级
+                    result += '\n';
+                });
+            });
+
+            // 显示总数和结果（去除最后多余的空行）
+            countArea.innerText = `总组合数：${totalCount}`;
+            resultArea.innerHTML = result.trimEnd();
+        }
+
+        // 清空所有勾选和结果 + 重置总数
+        function clearAll() {
+            const allCheckboxes = document.querySelectorAll('input[type="checkbox"]');
+            allCheckboxes.forEach(box => box.checked = false);
+            const resultArea = document.getElementById('resultArea');
+            const countArea = document.getElementById('countArea');
+            resultArea.innerHTML = '请勾选各数位的数字，点击「生成组合」查看结果<br>或点击「导入TXT」读取组合文件自动勾选';
+            resultArea.style.color = '#1f2937';
+            countArea.innerText = '总组合数：0';
+        }
+
+        // 复制结果到剪贴板
+        function copyResult() {
+            const resultArea = document.getElementById('resultArea');
+            const text = resultArea.innerText;
+            if (text.includes('请勾选') || text.includes('⚠️')) {
+                alert('暂无有效组合可复制！');
+                return;
+            }
+            navigator.clipboard.writeText(text).then(() => {
+                alert('组合结果已成功复制到剪贴板！');
+            }).catch(err => {
+                alert('复制失败：' + err);
+            });
+        }
+
+        // 下载结果到TXT文件（导出）
+        function downloadToTxt() {
+            const resultArea = document.getElementById('resultArea');
+            const text = resultArea.innerText;
+            if (text.includes('请勾选') || text.includes('⚠️')) {
+                alert('暂无有效组合可导出！');
+                return;
+            }
+            // UTF-8编码，避免乱码
+            const blob = new Blob([text], { type: 'text/plain; charset=utf-8' });
+            const a = document.createElement('a');
+            // 时间戳命名文件
+            const now = new Date();
+            const fileName = `四位数组合_${now.getFullYear()}${(now.getMonth()+1).toString().padStart(2,0)}${now.getDate().toString().padStart(2,0)}_${now.getHours().toString().padStart(2,0)}${now.getMinutes().toString().padStart(2,0)}.txt`;
+            a.href = URL.createObjectURL(blob);
+            a.download = fileName;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(a.href);
+            alert(`组合结果已成功导出为TXT文件！`);
+        }
+
+        // 处理文件导入【核心加固：语义化索引，明确千位[0]、个位[3]，避免混淆】
+        function handleFileImport(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            // 校验文件格式
+            if (file.type !== 'text/plain' && !file.name.endsWith('.txt')) {
+                alert('请导入TXT格式的文本文件！');
+                event.target.value = ''; // 清空文件选择
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const content = e.target.result;
+                    // 提取所有四位数（过滤非数字、不足四位的内容，兼容全角/半角空格）
+                    const numReg = /\d{4}/g;
+                    const numList = content.match(numReg) || [];
+
+                    if (numList.length === 0) {
+                        alert('导入的文件中未识别到有效的四位数组合！');
+                        event.target.value = '';
+                        return;
+                    }
+
+                    // 清空原有勾选
+                    clearAll();
+
+                    // 统计各数位出现的数字【语义化命名，明确索引：0=千、1=百、2=十、3=个】
+                    const qianSet = new Set(); // 千位：num[0]
+                    const baiSet = new Set();   // 百位：num[1]
+                    const shiSet = new Set();   // 十位：num[2]
+                    const geSet = new Set();    // 个位：num[3]
+
+                    numList.forEach(fourNum => {
+                        qianSet.add(fourNum[0]); // 严格千位：第一位
+                        baiSet.add(fourNum[1]);   // 严格百位：第二位
+                        shiSet.add(fourNum[2]);   // 严格十位：第三位
+                        geSet.add(fourNum[3]);    // 严格个位：第四位
+                    });
+
+                    // 自动勾选对应数位的数字
+                    checkBitNums('qianBit', qianSet);
+                    checkBitNums('baiBit', baiSet);
+                    checkBitNums('shiBit', shiSet);
+                    checkBitNums('geBit', geSet);
+
+                    // 提示导入成功，并自动生成组合
+                    alert(`成功导入${numList.length}个四位数组合，已自动勾选对应数位！`);
+                    generateCombination();
+
+                } catch (err) {
+                    alert('文件解析失败：' + err.message);
+                } finally {
+                    event.target.value = ''; // 清空文件选择，避免重复导入
+                }
+            };
+
+            reader.readAsText(file, 'UTF-8'); // 按UTF-8读取，避免乱码
+        }
+
+        // 勾选指定数位的数字
+        function checkBitNums(bitId, numSet) {
+            const checkboxes = document.querySelectorAll(`#${bitId} input[type="checkbox"]`);
+            checkboxes.forEach(checkbox => {
+                if (numSet.has(checkbox.value)) {
+                    checkbox.checked = true;
+                }
+            });
+        }
+    </script>
+</body>
+</html>

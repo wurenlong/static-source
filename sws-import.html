@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>四位数组合过滤工具</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: "Microsoft YaHei", sans-serif;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 30px auto;
+            padding: 0 20px;
+        }
+        .upload-area {
+            padding: 20px;
+            border: 2px dashed #ccc;
+            border-radius: 8px;
+            text-align: center;
+            margin-bottom: 30px;
+            cursor: pointer;
+            transition: border-color 0.3s;
+        }
+        .upload-area:hover {
+            border-color: #409eff;
+        }
+        #fileInput {
+            display: none;
+        }
+        .filter-area {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            align-items: flex-start;
+            margin-bottom: 20px;
+            padding: 20px;
+            background: #f5f7fa;
+            border-radius: 8px;
+        }
+        .filter-item {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        .filter-item label {
+            font-weight: 600;
+            color: #333;
+            white-space: nowrap;
+        }
+        .filter-item textarea {
+            width: 80px;
+            height: 80px;
+            padding: 8px;
+            border: 1px solid #dcdcdc;
+            border-radius: 4px;
+            font-size: 16px;
+            text-align: center;
+            outline: none;
+            resize: none;
+            line-height: 1.8;
+        }
+        .filter-item textarea:focus {
+            border-color: #409eff;
+        }
+        .btn {
+            padding: 8px 20px;
+            height: 36px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background 0.3s;
+            margin-top: 24px;
+        }
+        .btn-primary {
+            background: #409eff;
+            color: #fff;
+        }
+        .btn-primary:hover {
+            background: #337ecc;
+        }
+        .btn-success {
+            background: #67c23a;
+            color: #fff;
+            margin-left: 10px;
+        }
+        .btn-success:hover {
+            background: #529b2e;
+        }
+        .result-area {
+            margin-top: 30px;
+        }
+        .result-title {
+            font-size: 20px;
+            font-weight: 600;
+            margin-bottom: 15px;
+            color: #333;
+        }
+        .count-info {
+            font-size: 18px;
+            font-weight: 600;
+            color: #e6a23c;
+            margin-bottom: 15px;
+        }
+        .result-content {
+            width: 100%;
+            min-height: 300px;
+            padding: 15px;
+            border: 1px solid #dcdcdc;
+            border-radius: 8px;
+            font-family: Consolas, monospace;
+            font-size: 14px;
+            line-height: 1.5;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            overflow: auto;
+        }
+        .hidden {
+            display: none;
+        }
+        .tip {
+            font-size: 12px;
+            color: #999;
+            margin-top: 4px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- 文件上传区域 -->
+        <div class="upload-area" onclick="document.getElementById('fileInput').click()">
+            <input type="file" id="fileInput" accept=".txt" onchange="handleFileUpload(this)">
+            <p>点击上传TXT文件（仅支持四位数组合的TXT文件）</p>
+            <p style="color: #999; margin-top: 8px;">文件内容为空格分隔的四位数，每行一个组合</p>
+        </div>
+
+        <!-- 过滤条件区域 -->
+        <div class="filter-area hidden" id="filterArea">
+            <div class="filter-item">
+                <label>排除千位：</label>
+                <textarea id="thousand" placeholder="0-9&#10;连输即可&#10;如013"></textarea>
+                <div class="tip">支持连输/空格/换行，自动去重</div>
+            </div>
+            <div class="filter-item">
+                <label>排除百位：</label>
+                <textarea id="hundred" placeholder="0-9&#10;连输即可&#10;如013"></textarea>
+                <div class="tip">支持连输/空格/换行，自动去重</div>
+            </div>
+            <div class="filter-item">
+                <label>排除十位：</label>
+                <textarea id="ten" placeholder="0-9&#10;连输即可&#10;如013"></textarea>
+                <div class="tip">支持连输/空格/换行，自动去重</div>
+            </div>
+            <div class="filter-item">
+                <label>排除个位：</label>
+                <textarea id="unit" placeholder="0-9&#10;连输即可&#10;如013"></textarea>
+                <div class="tip">支持连输/空格/换行，自动去重</div>
+            </div>
+            <button class="btn btn-primary" onclick="filterCombination()">排除</button>
+            <button class="btn btn-success" onclick="exportResult()" id="exportBtn">导出TXT</button>
+        </div>
+
+        <!-- 结果展示区域 -->
+        <div class="result-area hidden" id="resultArea">
+            <h3 class="result-title" id="resultTitle"></h3>
+            <div class="count-info" id="countInfo">总组合数：0</div>
+            <div class="result-content" id="resultContent"></div>
+        </div>
+    </div>
+
+    <script>
+        // 全局存储原始组合和过滤后的组合
+        let originalCombinations = [];
+        let filteredCombinations = [];
+        let fileName = "";
+
+        // 处理文件上传
+        function handleFileUpload(fileInput) {
+            const file = fileInput.files[0];
+            if (!file) return;
+            if (file.type !== "text/plain" && !file.name.endsWith(".txt")) {
+                alert("请上传TXT格式的文件！");
+                fileInput.value = "";
+                return;
+            }
+            fileName = file.name.replace(".txt", "");
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const content = e.target.result;
+                originalCombinations = parseContent(content);
+                filteredCombinations = [...originalCombinations];
+                showResult();
+                document.getElementById("filterArea").classList.remove("hidden");
+                document.getElementById("resultArea").classList.remove("hidden");
+                fileInput.value = "";
+            };
+            reader.readAsText(file, "utf-8");
+        }
+
+        // 解析文件内容
+        function parseContent(content) {
+            const combinations = [];
+            const lines = content.split(/\r?\n/);
+            lines.forEach(line => {
+                const nums = line.trim().split(/\s+/).filter(num => {
+                    return /^\d{4}$/.test(num);
+                });
+                if (nums.length > 0) {
+                    combinations.push(nums);
+                }
+            });
+            return combinations;
+        }
+
+        // 【核心修改】解析输入：连输数字自动拆分，支持混合输入，自动去重过滤0-9
+        function getFilterNums(id) {
+            const val = document.getElementById(id).value.trim();
+            if (!val) return []; // 无输入返回空数组，不过滤
+            // 第一步：移除所有非数字字符（空格、换行、字母等），只保留纯数字
+            const onlyNums = val.replace(/\D/g, '');
+            // 第二步：将纯数字字符串拆分为单个字符，再转数字、去重、过滤0-9
+            return [...new Set(
+                onlyNums.split('')
+                       .map(Number)
+                       .filter(num => num >= 0 && num <= 9)
+            )];
+        }
+
+        // 过滤组合逻辑
+        function filterCombination() {
+            const filterThousand = getFilterNums("thousand");
+            const filterHundred = getFilterNums("hundred");
+            const filterTen = getFilterNums("ten");
+            const filterUnit = getFilterNums("unit");
+
+            filteredCombinations = originalCombinations.map(line => {
+                return line.filter(num => {
+                    const thousand = parseInt(num[0]);
+                    const hundred = parseInt(num[1]);
+                    const ten = parseInt(num[2]);
+                    const unit = parseInt(num[3]);
+                    // 对应数位不在排除数组中则保留
+                    return !filterThousand.includes(thousand) &&
+                           !filterHundred.includes(hundred) &&
+                           !filterTen.includes(ten) &&
+                           !filterUnit.includes(unit);
+                });
+            }).filter(line => line.length > 0); // 过滤空行
+
+            showResult();
+        }
+
+        // 展示结果
+        function showResult() {
+            document.getElementById("resultTitle").innerText = fileName;
+            const total = filteredCombinations.reduce((sum, line) => sum + line.length, 0);
+            document.getElementById("countInfo").innerText = `总组合数：${total}`;
+            const resultText = filteredCombinations.map(line => line.join(" ")).join("\n");
+            document.getElementById("resultContent").innerText = resultText;
+        }
+
+        // 导出文件
+        function exportResult() {
+            if (filteredCombinations.length === 0) {
+                alert("暂无可导出的组合数据！");
+                return;
+            }
+            const exportContent = filteredCombinations.map(line => line.join(" ")).join("\n");
+            const blob = new Blob([exportContent], { type: "text/plain; charset=utf-8" });
+            const a = document.createElement("a");
+            a.href = URL.createObjectURL(blob);
+            a.download = `${fileName}_过滤结果.txt`;
+            a.click();
+            URL.revokeObjectURL(a.href);
+        }
+    </script>
+</body>
+</html>
